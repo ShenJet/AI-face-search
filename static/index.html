@@ -13,7 +13,10 @@
     <br>    
     <button type="submit" onclick="sub()">提交识别</button>
     <br>
+    <h4>图片搜寻结果：(注意看result字段)</h4>
+    <p id="p"></p>
     <img src="" alt="" id="img">
+    
 </body>
 <script>
 
@@ -39,6 +42,8 @@
                 },
                 success: function(res) {
                     console.log(res);
+                    $("#p").text(JSON.stringify(res))
+
                 },
                 fail: function(res) {
                     console.log(res);
