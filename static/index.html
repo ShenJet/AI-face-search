@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>人脸信息识别</title>
+    <script src="jquery-3.1.1.min.js"></script>
+</head>
+<body>
+
+    <input id="a" type="file" accept="image/*">
+    <br>    
+    <button type="submit" onclick="sub()">提交识别</button>
+    <br>
+    <img src="" alt="" id="img">
+</body>
+<script>
+
+    var sub = function() {
+        var a = document.getElementById("a");
+        var f = a.files[0];
+        // console.log(f);
+        var reader = new FileReader();
+        reader.readAsDataURL(f); // 读出 base64
+        reader.onload = function (){
+            var base64 = reader.result;
+            var newimg = document.getElementById("img");
+            newimg.src = base64;
+            newimg.width = 350;
+            // send
+            $.ajax({
+                method:"POST",
+                url:"http://localhost:3004/upload",
+                async:true,
+                dataType:"json",
+                data:{
+                    base64: base64
+                },
+                success: function(res) {
+                    console.log(res);
+                },
+                fail: function(res) {
+                    console.log(res);
+                } 
+            })
+        }
+    } 
+
+</script>
+</html>
