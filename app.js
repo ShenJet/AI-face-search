@@ -76,6 +76,55 @@ app.post('/upload', urlencodedParser, (req, res) => {
         res.send({code:0,msg:"img data is null"});
     } 
 });
+
+// 参考文档：https://cloud.baidu.com/doc/FACE/s/Nk37c1r9i
+app.post('/part_recognition', urlencodedParser, (req, res) => {
+// app.get('/upload', (req, res) => {
+    var base64 = req.body.base64
+    // console.log(base64);
+    if(base64){
+        //过滤data:URL
+        base64 = base64.replace(/^data:image\/\w+;base64,/, "");
+        // var dataBuffer = new Buffer(_base64, 'base64');
+        // fs.writeFile(__dirname+"/upload/"+Math.floor(Math.random()*10000000)+".jpeg", dataBuffer, function(err) {
+        //     if(err){
+        //         console.log(err);
+        //     }else{
+        //         console.log("save OK~");
+        //     }
+        // });
+        var imageType = "BASE64";
+
+        // 如果有可选参数
+        var options = {};
+
+        // age,beauty,expression,face_shape,gender,glasses,landmark,landmark72，landmark150,quality,eye_status,emotion,face_type
+        // options["face_field"] = "age,beauty,expression,face_shape,gender,glasses,landmark,landmark72,landmark150,quality,eye_status,emotion,face_type";
+        options["face_field"] = "age,beauty,expression,face_shape,gender,glasses,landmark150,quality,eye_status,emotion,face_type";
+
+        options["max_face_num"] = "2";
+        options["face_type"] = "LIVE";
+        options["liveness_control"] = "LOW";
+        client.detect(base64, imageType, options).then(function(result) {
+            // 人脸检测
+            console.log('---人脸检测---');
+            console.log(result);
+            // console.log(JSON.stringify(result));
+            console.log('---人脸检测结束---');
+            res.json(result)
+            // return result
+        }).catch(function(err) {
+            // 如果发生网络错误
+            console.log('---人脸检测---');
+            console.log(err);
+            console.log('---人脸检测结束---');
+            return err
+        });
+    }else{
+        res.send({code:0,msg:"img data is null"});
+    } 
+});
+
 app.listen(port, () => console.log(`listening on http://localhost:${port}`));
 
 

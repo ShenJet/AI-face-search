@@ -9,32 +9,68 @@
 </head>
 <body>
 
-    <input id="a" type="file" accept="image/*">
+    <input id="a" type="file" onchange="change()" accept="image/*">
     <br>    
-    <button type="submit" onclick="sub()">提交识别</button>
+    <button type="submit" onclick="sub('search')">提交识别</button>
+    <button type="submit" onclick="sub('detect')">人脸信息检测</button>
     <br>
     <h4>图片搜寻结果：(注意看result字段)</h4>
     <p id="p"></p>
+    <div>
+        图中人物：
+        <p id='who'></p>
+    </div>
+    <div>
+        可信率：
+        <p id='trust'></p>
+    </div>
+    <canvas id="can" width="800" height="1000" style="margin: 0 auto; border: 1px solid #e5e5e5;"></canvas>
     <img src="" alt="" id="img">
     
 </body>
 <script>
-
-    var sub = function() {
-        var a = document.getElementById("a");
-        var f = a.files[0];
+    var base64, canvas, ctx;
+    canvas = document.getElementById("can");
+    ctx = canvas.getContext("2d");
+    
+    var change = function(e) {
+        canvas.width = canvas.width;
+        e = e || window.event;
+        console.log(e);
+        // var a = document.getElementById("a");
+        var f = e.target.files.length && e.target.files[0];
         // console.log(f);
         var reader = new FileReader();
         reader.readAsDataURL(f); // 读出 base64
         reader.onload = function (){
-            var base64 = reader.result;
+            base64 = reader.result;
+            // console.log(base64);
+            // 图片展示
             var newimg = document.getElementById("img");
             newimg.src = base64;
-            newimg.width = 350;
-            // send
-            $.ajax({
+            newimg.style.width = '800px';
+            newimg.onload = function(){
+                // 绘制到cavas
+                console.log('height:' + this.height, 'width:' + this.width)
+                
+                
+                ctx.strokeStyle = "#0000ff";
+                ctx.lineWidth = 5;
+                
+                ctx.drawImage(newimg,0, 0, 800, this.height);
+            }
+        }
+    } 
+
+    var sub = function (mode='search'){
+        var url = "http://localhost:3004/upload"
+        if(mode == 'detect'){
+            url = "http://localhost:3004/part_recognition"
+        }
+        // send
+        $.ajax({
                 method:"POST",
-                url:"http://localhost:3004/upload",
+                url:url,
                 async:true,
                 dataType:"json",
                 data:{
@@ -42,16 +78,118 @@
                 },
                 success: function(res) {
                     console.log(res);
-                    $("#p").text(JSON.stringify(res))
-
+                    if(res.error_msg != 'SUCCESS'){
+                        return alert('识别失败，请更换图片')
+                    }
+                    if(mode='detect'){
+                        var face_count = res.result.face_list.length || 0
+                        if(face_count < 1){
+                            return alert('没有检测到人脸信息！！！')
+                        }
+                        var landmark150 = res.result.face_list[0].landmark150;
+                        // canvas 绘制无关区域
+                        var pointsInfo = [
+                            [
+                                landmark150.eye_left_eyelid_lower_1,
+                                landmark150.eye_left_eyelid_lower_2,
+                                landmark150.eye_left_eyelid_lower_3,
+                                landmark150.eye_left_eyelid_lower_4,
+                                landmark150.eye_left_eyelid_lower_5,
+                                landmark150.eye_left_eyelid_lower_6,
+                                landmark150.eye_left_eyelid_lower_7,
+                            ],[
+                                landmark150.eye_left_eyelid_upper_1,
+                                landmark150.eye_left_eyelid_upper_2,
+                                landmark150.eye_left_eyelid_upper_3,
+                                landmark150.eye_left_eyelid_upper_4,
+                                landmark150.eye_left_eyelid_upper_5,
+                                landmark150.eye_left_eyelid_upper_6,
+                                landmark150.eye_left_eyelid_upper_7,
+                            ],[
+                                landmark150.eye_right_eyelid_lower_1,
+                                landmark150.eye_right_eyelid_lower_2,
+                                landmark150.eye_right_eyelid_lower_3,
+                                landmark150.eye_right_eyelid_lower_4,
+                                landmark150.eye_right_eyelid_lower_5,
+                                landmark150.eye_right_eyelid_lower_6,
+                                landmark150.eye_right_eyelid_lower_7,
+                            ],[
+                                landmark150.eye_right_eyelid_upper_1,
+                                landmark150.eye_right_eyelid_upper_2,
+                                landmark150.eye_right_eyelid_upper_3,
+                                landmark150.eye_right_eyelid_upper_4,
+                                landmark150.eye_right_eyelid_upper_5,
+                                landmark150.eye_right_eyelid_upper_6,
+                                landmark150.eye_right_eyelid_upper_7,
+                            ],[
+                                landmark150.nose_left_contour_1,
+                                landmark150.nose_left_contour_2,
+                                landmark150.nose_left_contour_3,
+                                landmark150.nose_left_contour_4,
+                                landmark150.nose_left_contour_5,
+                                landmark150.nose_left_contour_6,
+                                landmark150.nose_left_contour_7,
+                            ],[
+                                landmark150.nose_right_contour_1,
+                                landmark150.nose_right_contour_2,
+                                landmark150.nose_right_contour_3,
+                                landmark150.nose_right_contour_4,
+                                landmark150.nose_right_contour_5,
+                                landmark150.nose_right_contour_6,
+                                landmark150.nose_right_contour_7,
+                            ],[
+                                landmark150.mouth_lip_upper_outer_1,
+                                landmark150.mouth_lip_upper_outer_2,
+                                landmark150.mouth_lip_upper_outer_3,
+                                landmark150.mouth_lip_upper_outer_4,
+                                landmark150.mouth_lip_upper_outer_5,
+                                landmark150.mouth_lip_upper_outer_6,
+                                landmark150.mouth_lip_upper_outer_7,
+                                landmark150.mouth_lip_upper_outer_8,
+                                landmark150.mouth_lip_upper_outer_9,
+                                landmark150.mouth_lip_upper_outer_10,
+                                landmark150.mouth_lip_upper_outer_11,
+                            ],[
+                                landmark150.mouth_lip_lower_outer_1,
+                                landmark150.mouth_lip_lower_outer_2,
+                                landmark150.mouth_lip_lower_outer_3,
+                                landmark150.mouth_lip_lower_outer_4,
+                                landmark150.mouth_lip_lower_outer_5,
+                                landmark150.mouth_lip_lower_outer_6,
+                                landmark150.mouth_lip_lower_outer_7,
+                                landmark150.mouth_lip_lower_outer_8,
+                                landmark150.mouth_lip_lower_outer_9,
+                                landmark150.mouth_lip_lower_outer_10,
+                                landmark150.mouth_lip_lower_outer_11,
+                            ]
+                        ];
+                        for (let i = 0; i < pointsInfo.length; i++) {
+                            const partAxis = pointsInfo[i];
+                            for (let k = 0; k < partAxis.length; k++) {
+                                const point = partAxis[k];
+                                if (k===0) {
+                                    // 起笔
+                                    ctx.moveTo(point.x, point.y);
+                                }else{
+                                    ctx.lineTo(point.x, point.y);
+                                }
+                                if(k === partAxis.length - 1){
+                                    ctx.stroke();
+                                }
+                            }
+                        }
+                    }else{
+                        $("#p").text(JSON.stringify(res))
+                        $("#trust").text(res.result.face_list.length && res.result.face_list[0])
+                        // $("#who").text(res.result.face_list.length && res.result.face_list[0].user_id)
+                    }
                 },
                 fail: function(res) {
                     console.log(res);
                     $("#p").text(JSON.stringify(res))
                 } 
             })
-        }
-    } 
+    }
 
 </script>
 </html>
